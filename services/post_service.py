@@ -1,5 +1,6 @@
 from beanie import PydanticObjectId
 from models.post_model import Post
+from models.newspaper_publisher_model import NewspaperPublisher
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse
 
 
@@ -14,7 +15,34 @@ class PostService:
         try:
             post = Post(**request.dict())
             await post.insert()
-            return PostResponse(**post.dict())
+            
+            publisher = await NewspaperPublisher.find_one(NewspaperPublisher.domain == request.domain)
+
+            if publisher:
+                post.newspaper_publisher = publisher
+                await post.save()
+            else:
+                post.newspaper_publisher = None
+                await post.save()
+
+            post.newspaper_publisher = publisher
+
+            await post.save()
+
+            return PostResponse(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                summary=post.summary,
+                domain=post.domain,
+                image_URL=post.image_URL,
+                highlight=post.highlight,
+                references=post.references,
+                author=post.author,
+                timestamp=post.timestamp,
+                topic=post.topic,
+                newspaper_publisher=post.newspaper_publisher.id if post.newspaper_publisher else None
+            )
         except Exception as e:
             print(e)
             return None
@@ -25,7 +53,24 @@ class PostService:
             post = await Post.get(id)
             if not post:
                 raise Exception("Post not found")
-            return PostResponse(**post.dict())
+                
+            newspaper_publisher = await post.newspaper_publisher.fetch()
+
+            return PostResponse(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                summary=post.summary,
+                domain=post.domain,
+                image_URL=post.image_URL,
+                highlight=post.highlight,
+                references=post.references,
+                author=post.author,
+                timestamp=post.timestamp,
+                topic=post.topic,
+                newspaper_publisher=newspaper_publisher.id if newspaper_publisher else None
+            )
+        
         except Exception as e:
             print(e)
             return None
@@ -33,10 +78,35 @@ class PostService:
 
     async def get_all_posts(self) -> list[PostResponse]:
         try:
-            return await Post.find_all().to_list()
+            db_post = await Post.find_all().sort(-Post.timestamp).to_list()
+
+            results = []
+            for post in db_post:
+                publisher_id = None
+                if post.newspaper_publisher is not None:
+                    publisher = await post.newspaper_publisher.fetch()
+                    publisher_id = publisher.id
+
+                results.append(
+                    PostResponse(
+                        id=post.id,
+                        title=post.title,
+                        content=post.content,
+                        summary=post.summary,
+                        domain=post.domain,
+                        image_URL=post.image_URL,
+                        highlight=post.highlight,
+                        references=post.references,
+                        author=post.author,
+                        timestamp=post.timestamp,
+                        topic=post.topic,
+                        newspaper_publisher=publisher_id
+                    )
+                )
+            return results
         except Exception as e:
             print(e)
-            return None
+            return []
 
 
     async def update_post(self, id: PydanticObjectId, request: PostUpdate) -> PostResponse:
@@ -47,7 +117,29 @@ class PostService:
             for key, value in request.dict(exclude_unset=True).items():
                 setattr(post, key, value)
             await post.save()
-            return PostResponse(**post.dict())
+
+            if request.domain:
+                publisher = await NewspaperPublisher.find_one(NewspaperPublisher.domain == request.domain)
+                if publisher:
+                    post.newspaper_publisher = publisher
+                else:
+                    post.newspaper_publisher = None
+                await post.save()
+
+            return PostResponse(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                summary=post.summary,
+                domain=post.domain,
+                image_URL=post.image_URL,
+                highlight=post.highlight,
+                references=post.references,
+                author=post.author,
+                timestamp=post.timestamp,
+                topic=post.topic,
+                newspaper_publisher=post.newspaper_publisher.id if post.newspaper_publisher else None
+            )
         except Exception as e:
             print(e)
             return None
@@ -59,7 +151,23 @@ class PostService:
             if not post:
                 raise Exception("Post not found")
             await post.delete()
-            return PostResponse(**post.dict())
+
+            newspaper_publisher = await post.newspaper_publisher.fetch() 
+
+            return PostResponse(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                summary=post.summary,
+                domain=post.domain,
+                image_URL=post.image_URL,
+                highlight=post.highlight,
+                references=post.references,
+                author=post.author,
+                timestamp=post.timestamp,
+                topic=post.topic,
+                newspaper_publisher=newspaper_publisher.id if newspaper_publisher else None
+            )
         except Exception as e:
             print(e)
             return None

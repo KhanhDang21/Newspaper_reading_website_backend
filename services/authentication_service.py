@@ -60,7 +60,7 @@ class AuthenticationService:
                 "username": form_data.username
             }
         )
-
+        
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,7 +77,7 @@ class AuthenticationService:
         access_token = create_access_token(
             {
                 "sub": user.username,
-                "id": str(user.id)                
+                "id": str(user.user_info.to_dict().get("id"))        
             },
             timedelta(minutes=int(ACCESS_TOKEN_EXPIRED_MINUTES)),
         )

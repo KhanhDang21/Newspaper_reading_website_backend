@@ -39,23 +39,24 @@ async def get_current_user(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        #user_id: str = payload.get("id")
+        user_id: str = payload.get("id")
 
-        #if user_id is None or username is None:
-        #    raise HTTPException(
-        #       status_code=status.HTTP_401_UNAUTHORIZED,
-        #        detail="Cannot validate user!",
-        #    )
+        if user_id is None or username is None:
+           raise HTTPException(
+               status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Cannot validate user!",
+            )
 
-        user = await UserAuthentication.find_one(
-            UserAuthentication.username == username
+        user = await UserInfo.find_one(
+            UserInfo.id == PydanticObjectId(user_id)
         )
-
+        
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found!",
             )
+        
         return user
     
     except Exception as e:

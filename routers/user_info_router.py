@@ -7,8 +7,8 @@ from configs.authentication import get_current_user
 
 
 router = APIRouter(
-    prefix="/userinfo", 
-    tags=["userinfo"]
+    prefix="/user-info", 
+    tags=["user-info"]
     )
 
 
@@ -55,9 +55,10 @@ async def get_all_users(
 async def update_user(
     id: PydanticObjectId, 
     request: UserInfoUpdate,
-    service = Depends(get_userinfo_service)
+    service = Depends(get_userinfo_service),
+    current_user = Depends(get_current_user)
 ):
-    user_db = await service.update_user(id, request)
+    user_db = await service.update_user(id, request, current_user)
     return BaseResponse(
         message="User updated successfully",
         status="success",

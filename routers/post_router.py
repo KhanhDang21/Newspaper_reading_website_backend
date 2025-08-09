@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from beanie import PydanticObjectId
-from services.post_service import PostServiceFactory
+from fastapi_pagination import Params, add_pagination, Page, paginate
+from fastapi_pagination.customization import CustomizedPage, UseParams
+from typing import TypeVar
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse
 from schemas.base_response import BaseResponse
 from services.post_service import get_post_service
@@ -36,16 +38,27 @@ async def get_post(
         data=db_post
     )
 
-@router.get("/", response_model=BaseResponse[list[PostResponse]] | list[PostResponse])
+T = TypeVar("T")
+
+class MyParams(Params):
+    size: int = Query(10, ge=1, le=100, alias="pageSize")
+    #page: int = Query(1, ge=1, alias="pageNumber")
+
+
+CustomPage = CustomizedPage[
+    Page[T],
+    UseParams(MyParams),
+]
+
+@router.get("/", response_model=CustomPage[PostResponse])
 async def get_all_posts(
-    service=Depends(get_post_service)
+    service=Depends(get_post_service),
 ):
     db_post = await service.get_all_posts()
-    return BaseResponse(
-        message="Posts retrieved successfully",
-        status="success",
-        data=db_post
-    )
+    return paginate(db_post)
+
+add_pagination(router)
+
 
 @router.put("/{id}", response_model=BaseResponse[PostResponse] | PostResponse)
 async def update_post(

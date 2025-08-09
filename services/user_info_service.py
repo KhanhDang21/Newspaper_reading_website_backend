@@ -12,16 +12,13 @@ class UserinfoServiceFactory:
 class UserinfoService:
     async def create_user(self, request: UserInfoCreate, current_user: UserAuthentication) -> UserInfoResponse:
         try:
-            user_info = UserInfo(
-                user_id= current_user.id,
-                full_name=request.full_name,
-                number_phone=request.number_phone,
-                email=request.email,
-                id_personal=request.id_personal,
-                role=request.role,
-                status=request.status
-            )
+            user_info = UserInfo(**request.dict())
+
             await user_info.insert()
+            
+            current_user.user_info = user_info
+            await current_user.save()
+
             return UserInfoResponse(**user_info.dict())
         except Exception as e:
             print(e)
@@ -47,7 +44,7 @@ class UserinfoService:
             return None
 
 
-    async def update_user(self, id: PydanticObjectId, request: UserInfoUpdate) -> UserInfoResponse:
+    async def update_user(self, id: PydanticObjectId, request: UserInfoUpdate, current_user: UserAuthentication) -> UserInfoResponse:
         try:
             user = await UserInfo.get(id)
             if not user:
@@ -55,6 +52,10 @@ class UserinfoService:
             for key, value in request.dict(exclude_unset=True).items():
                 setattr(user, key, value)
             await user.save()
+
+            current_user.user_info = user
+            await current_user.save()
+
             return UserInfoResponse(**user.dict())
         except Exception as e:
             print(e)

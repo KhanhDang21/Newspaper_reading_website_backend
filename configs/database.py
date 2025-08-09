@@ -6,8 +6,12 @@ from pymongo.errors import PyMongoError
 
 from models.user_info_model import UserInfo
 from models.post_model import Post
-from models.product_solution_model import ProductSolution
+from models.newspaper_publisher_model import NewspaperPublisher
 from models.user_authentication_model import UserAuthentication
+from models.tag_model import Tag
+from models.user_info_tag_model import UserInfoTag
+from models.post_tag_model import PostTag
+
 
 load_dotenv()
 
@@ -25,9 +29,12 @@ async def init_db():
             database=client[DB_NAME],
             document_models=[
                 UserInfo,
-                ProductSolution,
+                NewspaperPublisher,
                 Post,
-                UserAuthentication  
+                UserAuthentication,
+                Tag,
+                UserInfoTag,
+                PostTag
             ]
         )
         print("✅ Beanie initialized successfully")
