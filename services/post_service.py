@@ -1,8 +1,9 @@
 from beanie import PydanticObjectId
 from models.post_model import Post
+from models.post_tag_model import PostTag
 from models.newspaper_publisher_model import NewspaperPublisher
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse
-
+from bson import ObjectId
 
 class PostServiceFactory:
     @staticmethod
@@ -78,7 +79,7 @@ class PostService:
 
     async def get_all_posts(self) -> list[PostResponse]:
         try:
-            db_post = await Post.find_all().sort(-Post.timestamp).to_list()
+            db_post = await Post.find_all().sort(-Post.id).to_list()
 
             results = []
             for post in db_post:
@@ -171,6 +172,41 @@ class PostService:
         except Exception as e:
             print(e)
             return None
+        
+    
+    async def get_posts_by_tag(self, tag_id: PydanticObjectId) -> list[PostResponse]:
+        try:
+            post_tags = await PostTag.find(PostTag.tag.id == tag_id).sort(-PostTag.id).to_list()
+        
+            results = []
+            for post_item in post_tags:
+                
+                post = await post_item.post.fetch()
+                
+                publisher = await post.newspaper_publisher.fetch()
+                publisher_id = publisher.id if publisher else None
+
+                results.append(
+                    PostResponse(
+                        id=post.id,
+                        title=post.title,
+                        content=post.content,
+                        summary=post.summary,
+                        domain=post.domain,
+                        image_URL=post.image_URL,
+                        highlight=post.highlight,
+                        references=post.references,
+                        author=post.author,
+                        timestamp=post.timestamp,
+                        topic=post.topic,
+                        newspaper_publisher=publisher_id
+                    )
+                )
+            return results
+
+        except Exception as e:
+            print(f"[get_posts_by_tag] Error: {e}")
+            return []
 
 
 def get_post_service():

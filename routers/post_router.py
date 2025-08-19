@@ -40,22 +40,42 @@ async def get_post(
 
 T = TypeVar("T")
 
-class MyParams(Params):
+class MyParamsAllPost(Params):
     size: int = Query(10, ge=1, le=100, alias="pageSize")
     #page: int = Query(1, ge=1, alias="pageNumber")
 
-
-CustomPage = CustomizedPage[
+CustomPageAllPost = CustomizedPage[
     Page[T],
-    UseParams(MyParams),
+    UseParams(MyParamsAllPost),
 ]
 
-@router.get("/", response_model=CustomPage[PostResponse])
+@router.get("/", response_model=CustomPageAllPost[PostResponse])
 async def get_all_posts(
     service=Depends(get_post_service),
 ):
     db_post = await service.get_all_posts()
     return paginate(db_post)
+
+add_pagination(router)
+
+
+class MyParamsPostByTag(Params):
+    size: int = Query(3, ge=1, le=100, alias="pageSize")
+    #page: int = Query(1, ge=1, alias="pageNumber")
+
+CustomPagePostByTag = CustomizedPage[
+    Page[T],
+    UseParams(MyParamsPostByTag),
+]
+
+
+@router.get("/by_tag/{tag_id}", response_model=CustomPagePostByTag[PostResponse])
+async def get_posts_by_tag(
+    tag_id: PydanticObjectId,
+    service=Depends(get_post_service),
+):
+    db_posts = await service.get_posts_by_tag(tag_id)
+    return paginate(db_posts)
 
 add_pagination(router)
 

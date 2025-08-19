@@ -11,7 +11,8 @@ from models.user_authentication_model import UserAuthentication
 from models.tag_model import Tag
 from models.user_info_tag_model import UserInfoTag
 from models.post_tag_model import PostTag
-
+from models.comment_model import Comment
+from models.user_info_post_model import UserInfoPost
 
 load_dotenv()
 
@@ -34,7 +35,9 @@ async def init_db():
                 UserAuthentication,
                 Tag,
                 UserInfoTag,
-                PostTag
+                PostTag,
+                Comment,
+                UserInfoPost
             ]
         )
         print("✅ Beanie initialized successfully")
