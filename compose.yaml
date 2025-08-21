@@ -1,25 +1,38 @@
-version: "3.8"
+version: "3.9"
 
 services:
   fastapi:
     build: .
-    container_name: crawl_news_post
+    container_name: fastapi_app
     ports:
-      - "8000:8000"
+      - "8080:8080"
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/mydb
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - .:/app
-    env_file:
-      - .env
-    depends_on:
-      - mongo
 
-  mongo:
-    image: mongo:6
+  mongodb:
+    image: mongo:6.0
     container_name: mongodb
+    restart: always
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
 
+  redis:
+    image: redis:7.0
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   mongo_data:
+  redis_data:

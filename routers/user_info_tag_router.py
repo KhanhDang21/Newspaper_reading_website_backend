@@ -16,7 +16,7 @@ async def create_user_info_tag(
     service=Depends(get_user_info_tag_service),
     current_user=Depends(get_current_user)
 ):
-    db_user_info_tag = await service.create_user_info_tag(user_info_tag, current_user.id)
+    db_user_info_tag = await service.create_user_info_tag(user_info_tag, current_user)
     
     if db_user_info_tag is None:
         raise HTTPException(status_code=400, detail="User info tag creation failed")
@@ -43,9 +43,10 @@ async def get_user_info_tag(
 
 @router.get("/", response_model=BaseResponse[list[UserInfoTagResponse]] | list[UserInfoTagResponse])
 async def get_all_user_info_tags(
-    service=Depends(get_user_info_tag_service)
+    service=Depends(get_user_info_tag_service),
+    current_user=Depends(get_current_user)
 ):
-    db_user_info_tags = await service.get_all_user_info_tags()
+    db_user_info_tags = await service.get_all_tags_by_user_info(current_user)
     return BaseResponse(
         message="User info tags retrieved successfully",
         status="success",
@@ -53,28 +54,13 @@ async def get_all_user_info_tags(
     )
 
 
-@router.put("/{id}", response_model=BaseResponse[UserInfoTagResponse] | UserInfoTagResponse)
-async def update_user_info_tag(
-    id: PydanticObjectId, 
-    user_info_tag: UserInfoTagCreate,
-    service=Depends(get_user_info_tag_service)
-):
-    db_user_info_tag = await service.update_user_info_tag(id, user_info_tag)
-    if db_user_info_tag is None:
-        raise HTTPException(status_code=404, detail="User info tag not found")
-    return BaseResponse(
-        message="User info tag updated successfully",
-        status="success",
-        data=db_user_info_tag
-    )
-
-
 @router.delete("/{id}", response_model=BaseResponse[UserInfoTagResponse] | UserInfoTagResponse)
 async def delete_user_info_tag(
     id: PydanticObjectId,
-    service=Depends(get_user_info_tag_service)
+    service=Depends(get_user_info_tag_service),
+    current_user=Depends(get_current_user)
 ):
-    db_user_info_tag = await service.delete_user_info_tag(id)
+    db_user_info_tag = await service.delete_user_info_tag(id, current_user)
     if db_user_info_tag is None:
         raise HTTPException(status_code=404, detail="User info tag not found")
     return BaseResponse(

@@ -73,11 +73,16 @@ class AuthenticationService:
                 detail="Cannot validate user!",
             )
 
-        
+        user_id = str(user.id)
+
+        user_info_fetched = await user.user_info.fetch()
+        user_info_id = str(user_info_fetched.id) if user_info_fetched else None
+
         access_token = create_access_token(
             {
                 "sub": user.username,
-                "id": str(user.user_info.to_dict().get("id"))        
+                "id": user_id,
+                "user_info_id": user_info_id
             },
             timedelta(minutes=int(ACCESS_TOKEN_EXPIRED_MINUTES)),
         )

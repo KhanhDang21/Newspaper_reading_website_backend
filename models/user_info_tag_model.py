@@ -3,7 +3,7 @@ from models.user_info_model import UserInfo
 from models.tag_model import Tag
 
 class UserInfoTag(Document):
-    user: Link[UserInfo]
+    user_info: Link[UserInfo]
     tag: Link[Tag]
 
     class Settings:

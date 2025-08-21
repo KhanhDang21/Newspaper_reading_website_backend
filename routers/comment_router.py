@@ -23,21 +23,13 @@ async def create_comment(comment_create: CommentCreate,
         data=db_comment
     )
 
-@router.get("/{comment_id}", response_model=BaseResponse[CommentResponse])
-async def get_comment(comment_id: PydanticObjectId,
-                      service=Depends(get_comment_service)):
-    db_comment = await service.get_comment(comment_id)
-    if not db_comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    return BaseResponse(
-        message="Comment retrieved successfully",
-        status="success",
-        data=db_comment
-    )
 
-@router.get("/", response_model=BaseResponse[list[CommentResponse]])
-async def get_all_comments(service=Depends(get_comment_service)):
-    db_comments = await service.get_all_comments()
+@router.get("/{post_id}", response_model=BaseResponse[list[CommentResponse]])
+async def get_all_comments_by_post(
+    post_id: PydanticObjectId,
+    service=Depends(get_comment_service)
+):
+    db_comments = await service.get_all_comments_by_post(post_id)
     return BaseResponse(
         message="Comments retrieved successfully",
         status="success",

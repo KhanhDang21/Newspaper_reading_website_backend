@@ -39,18 +39,6 @@ async def get_user(
     )
 
 
-@router.get("/", response_model=BaseResponse[list[UserInfoResponse]] | list[UserInfoResponse])   
-async def get_all_users(
-    service = Depends(get_userinfo_service)
-):
-    user_db = await service.get_all_users()
-    return BaseResponse(
-        message="Users retrieved successfully",
-        status="success",
-        data=user_db
-    )
-
-
 @router.put("/{id}", response_model=BaseResponse[UserInfoResponse] | UserInfoResponse)
 async def update_user(
     id: PydanticObjectId, 
@@ -61,19 +49,6 @@ async def update_user(
     user_db = await service.update_user(id, request, current_user)
     return BaseResponse(
         message="User updated successfully",
-        status="success",
-        data=user_db
-    )
-
-
-@router.delete("/{id}", response_model=BaseResponse[UserInfoResponse] | UserInfoResponse)
-async def delete_user(
-    id: PydanticObjectId,
-    service = Depends(get_userinfo_service)
-    ):
-    user_db = await service.delete_user(id)
-    return BaseResponse(
-        message="User deleted successfully",
         status="success",
         data=user_db
     )
