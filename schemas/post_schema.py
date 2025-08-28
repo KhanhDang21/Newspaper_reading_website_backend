@@ -7,24 +7,26 @@ class PostCreate(BaseModel):
     content: str
     summary: Optional[str] = None
     domain: Optional[str] = None
-    image_URL: Optional[str] = None
+    url: Optional[str] = None
+    images: Optional[List[str]] = None
     highlight: Optional[str] = None
-    references: Optional[str] = None
+    references: Optional[List[str]] = None
     author: Optional[str] = None
-    timestamp: Optional[str] = None
-    topic: Optional[str] = None
+    time: Optional[str] = None
+    topic: Optional[List[str]] = None
 
 class PostUpdate(BaseModel):
     title: str
     content: str
     summary: Optional[str] = None
     domain: Optional[str] = None
-    image_URL: Optional[str] = None
+    url: Optional[str] = None
+    images: Optional[List[str]] = None
     highlight: Optional[str] = None
-    references: Optional[str] = None
+    references: Optional[List[str]] = None
     author: Optional[str] = None
-    timestamp: Optional[str] = None
-    topic: Optional[str] = None
+    time: Optional[str] = None
+    topic: Optional[List[str]] = None
 
 class PostResponse(BaseModel):
     id: PydanticObjectId
@@ -32,12 +34,13 @@ class PostResponse(BaseModel):
     content: str
     summary: Optional[str] = None
     domain: Optional[str] = None
-    image_URL: Optional[str] = None
+    url: Optional[str] = None
+    images: Optional[List[str]] = None
     highlight: Optional[str] = None
-    references: Optional[str] = None
+    references: Optional[List[str]] = None
     author: Optional[str] = None
-    timestamp: Optional[str] = None
-    topic: Optional[str] = None
+    time: Optional[str] = None
+    topic: Optional[List[str]] = None
     newspaper_publisher: Optional[PydanticObjectId] = None
 
     class Config:

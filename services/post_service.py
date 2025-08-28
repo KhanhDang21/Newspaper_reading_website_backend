@@ -1,9 +1,9 @@
 from beanie import PydanticObjectId
 from models.post_model import Post
+from models.tag_model import Tag
 from models.post_tag_model import PostTag
 from models.newspaper_publisher_model import NewspaperPublisher
 from schemas.post_schema import PostCreate, PostUpdate, PostResponse
-from bson import ObjectId
 
 class PostServiceFactory:
     @staticmethod
@@ -18,17 +18,21 @@ class PostService:
             await post.insert()
             
             publisher = await NewspaperPublisher.find_one(NewspaperPublisher.domain == request.domain)
-
-            if publisher:
-                post.newspaper_publisher = publisher
-                await post.save()
-            else:
-                post.newspaper_publisher = None
-                await post.save()
-
-            post.newspaper_publisher = publisher
-
+            post.newspaper_publisher = publisher if publisher else None
             await post.save()
+
+            for tag_name in request.topic:
+                tag = await Tag.find_one(Tag.name == tag_name)
+                if not tag:
+                    tag = Tag(name=tag_name)
+                    await tag.insert()
+                
+                existing_post_tag = await PostTag.find_one(
+                    (PostTag.post.id == post.id) & (PostTag.tag.id == tag.id)
+                )
+                if not existing_post_tag:
+                    post_tag = PostTag(post=post, tag=tag)
+                    await post_tag.insert()
 
             return PostResponse(
                 id=post.id,
@@ -36,16 +40,17 @@ class PostService:
                 content=post.content,
                 summary=post.summary,
                 domain=post.domain,
-                image_URL=post.image_URL,
+                url=post.url,
+                images=post.images,
                 highlight=post.highlight,
                 references=post.references,
                 author=post.author,
-                timestamp=post.timestamp,
+                time=post.time,
                 topic=post.topic,
                 newspaper_publisher=post.newspaper_publisher.id if post.newspaper_publisher else None
             )
         except Exception as e:
-            print(e)
+            print(f"[create_post] Error: {e}")
             return None
         
 
@@ -63,11 +68,12 @@ class PostService:
                 content=post.content,
                 summary=post.summary,
                 domain=post.domain,
-                image_URL=post.image_URL,
+                url=post.url,
+                images=post.images,
                 highlight=post.highlight,
                 references=post.references,
                 author=post.author,
-                timestamp=post.timestamp,
+                time=post.time,
                 topic=post.topic,
                 newspaper_publisher=newspaper_publisher.id if newspaper_publisher else None
             )
@@ -95,11 +101,12 @@ class PostService:
                         content=post.content,
                         summary=post.summary,
                         domain=post.domain,
-                        image_URL=post.image_URL,
+                        url=post.url,
+                        images=post.images,
                         highlight=post.highlight,
                         references=post.references,
                         author=post.author,
-                        timestamp=post.timestamp,
+                        time=post.time,
                         topic=post.topic,
                         newspaper_publisher=publisher_id
                     )
@@ -115,17 +122,29 @@ class PostService:
             post = await Post.get(id)
             if not post:
                 raise Exception("Post not found")
+
             for key, value in request.dict(exclude_unset=True).items():
                 setattr(post, key, value)
             await post.save()
 
             if request.domain:
                 publisher = await NewspaperPublisher.find_one(NewspaperPublisher.domain == request.domain)
-                if publisher:
-                    post.newspaper_publisher = publisher
-                else:
-                    post.newspaper_publisher = None
+                post.newspaper_publisher = publisher if publisher else None
                 await post.save()
+
+            if request.topic:
+                for tag_name in request.topic:
+                    tag = await Tag.find_one(Tag.name == tag_name)
+                    if not tag:
+                        tag = Tag(name=tag_name)
+                        await tag.insert()
+
+                    existing_post_tag = await PostTag.find_one(
+                        (PostTag.post.id == post.id) & (PostTag.tag.id == tag.id)
+                    )
+                    if not existing_post_tag:
+                        post_tag = PostTag(post=post, tag=tag)
+                        await post_tag.insert()
 
             return PostResponse(
                 id=post.id,
@@ -133,16 +152,17 @@ class PostService:
                 content=post.content,
                 summary=post.summary,
                 domain=post.domain,
-                image_URL=post.image_URL,
+                url=post.url,
+                images=post.images,
                 highlight=post.highlight,
                 references=post.references,
                 author=post.author,
-                timestamp=post.timestamp,
+                time=post.time,
                 topic=post.topic,
                 newspaper_publisher=post.newspaper_publisher.id if post.newspaper_publisher else None
             )
         except Exception as e:
-            print(e)
+            print(f"[update_post] Error: {e}")
             return None
 
 
@@ -161,11 +181,12 @@ class PostService:
                 content=post.content,
                 summary=post.summary,
                 domain=post.domain,
-                image_URL=post.image_URL,
+                url=post.url,
+                images=post.images,
                 highlight=post.highlight,
                 references=post.references,
                 author=post.author,
-                timestamp=post.timestamp,
+                time=post.time,
                 topic=post.topic,
                 newspaper_publisher=newspaper_publisher.id if newspaper_publisher else None
             )
@@ -193,11 +214,12 @@ class PostService:
                         content=post.content,
                         summary=post.summary,
                         domain=post.domain,
-                        image_URL=post.image_URL,
+                        url=post.url,
+                        images=post.images,
                         highlight=post.highlight,
                         references=post.references,
                         author=post.author,
-                        timestamp=post.timestamp,
+                        time=post.time,
                         topic=post.topic,
                         newspaper_publisher=publisher_id
                     )
