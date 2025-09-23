@@ -9,10 +9,15 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 class AutoNewsCrawler:
     def __init__(self):
         """Khởi tạo Auto News Crawler"""
-        self.GEMINI_API_KEY = "AIzaSyD9lfQ4kjedlaR5vqGCHrK6AcZIRx8_Kus"
+        self.GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
         self.crawled_urls = set()  # Lưu danh sách URL đã crawl để tránh duplicate
         
         # PARSERS - Cấu hình parser các website
