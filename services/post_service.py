@@ -28,7 +28,7 @@ class PostService:
                     await tag.insert()
                 
                 existing_post_tag = await PostTag.find_one(
-                    (PostTag.post.id == post.id) & (PostTag.tag.id == tag.id)
+                    PostTag.post.id == post.id, PostTag.tag.id == tag.id
                 )
                 if not existing_post_tag:
                     post_tag = PostTag(post=post, tag=tag)
@@ -201,10 +201,15 @@ class PostService:
         
             results = []
             for post_item in post_tags:
-                
+                if not post_item.post:
+                    continue  
+
                 post = await post_item.post.fetch()
-                
-                publisher = await post.newspaper_publisher.fetch()
+
+                publisher = None
+                if post.newspaper_publisher:
+                    publisher = await post.newspaper_publisher.fetch()
+
                 publisher_id = publisher.id if publisher else None
 
                 results.append(
@@ -224,6 +229,7 @@ class PostService:
                         newspaper_publisher=publisher_id
                     )
                 )
+
             return results
 
         except Exception as e:
